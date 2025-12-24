@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Analyze news requires POST method",
+      "method": "POST",
+      "queryParams": {
+        "country": "RU"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "analyzed": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

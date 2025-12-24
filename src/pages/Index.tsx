@@ -65,6 +65,8 @@ const Index = () => {
   const [realNews, setRealNews] = useState<any[]>([]);
   const [isLoadingNews, setIsLoadingNews] = useState(false);
   const [isCollectingNews, setIsCollectingNews] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [statistics, setStatistics] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredCountries = allCountries.filter(country =>
@@ -113,6 +115,38 @@ const Index = () => {
       alert('Ошибка сбора новостей. Проверьте, что все API ключи добавлены (NEWS_API_KEY и GROQ_API_KEY)');
     } finally {
       setIsCollectingNews(false);
+    }
+  };
+
+  const analyzeNews = async () => {
+    setIsAnalyzing(true);
+    try {
+      const response = await fetch(`https://functions.poehali.dev/4eb2ce54-d37b-4c71-abd8-4526895d7792?country=${selectedCountry.code}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Ошибка анализа');
+      }
+      setStatistics(data.statistics);
+      if (data.statistics) {
+        setSelectedCountry(prev => ({
+          ...prev,
+          democracyScore: data.statistics.democracyScore || prev.democracyScore,
+          freedomScore: data.statistics.freedomScore || prev.freedomScore,
+          pressFreedومScore: data.statistics.pressFreedomScore || prev.pressFreedومScore
+        }));
+      }
+      await loadNews(selectedCountry.code);
+      alert(`Анализ завершён! Проанализировано: ${data.analyzed}, Ошибок: ${data.failed}`);
+    } catch (error: any) {
+      console.error('Analysis error:', error);
+      alert(error.message || 'Ошибка анализа. Проверьте, что GROQ_API_KEY добавлен в секреты проекта');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -356,22 +390,54 @@ const Index = () => {
 
           <TabsContent value="news">
             <Card className="p-6 border-2">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
                 <h2 className="text-2xl font-bold flex items-center gap-2">
                   <Icon name="Newspaper" className="text-primary" />
                   Анализ Новостей
                 </h2>
-                <Button 
-                  onClick={collectNews} 
-                  disabled={isCollectingNews}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Icon name={isCollectingNews ? 'Loader2' : 'RefreshCw'} size={16} className={isCollectingNews ? 'animate-spin' : ''} />
-                  {isCollectingNews ? 'Сбор...' : 'Собрать новости'}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={collectNews} 
+                    disabled={isCollectingNews}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Icon name={isCollectingNews ? 'Loader2' : 'RefreshCw'} size={16} className={isCollectingNews ? 'animate-spin' : ''} />
+                    {isCollectingNews ? 'Сбор...' : 'Собрать новости'}
+                  </Button>
+                  <Button 
+                    onClick={analyzeNews}
+                    disabled={isAnalyzing}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Icon name={isAnalyzing ? 'Loader2' : 'Brain'} size={16} className={isAnalyzing ? 'animate-spin' : ''} />
+                    {isAnalyzing ? 'Анализ...' : 'Анализировать'}
+                  </Button>
+                </div>
               </div>
+              
+              {statistics && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-card-foreground/5 rounded-lg border">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-primary">{statistics.totalNews}</div>
+                    <div className="text-xs text-muted-foreground">Всего новостей</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-red-400">{statistics.fakeNews}</div>
+                    <div className="text-xs text-muted-foreground">Фейков</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-yellow-400">{statistics.avgCredibility}%</div>
+                    <div className="text-xs text-muted-foreground">Достоверность</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-green-400">{statistics.avgBias}%</div>
+                    <div className="text-xs text-muted-foreground">Предвзятость</div>
+                  </div>
+                </div>
+              )}
               
               {isLoadingNews ? (
                 <div className="flex items-center justify-center py-12">

@@ -1,4 +1,5 @@
 {
+  "analyze-news": "https://functions.poehali.dev/4eb2ce54-d37b-4c71-abd8-4526895d7792",
   "health": "https://functions.poehali.dev/c91ca8cb-34b8-448e-a25b-958012719826",
   "news-collector": "https://functions.poehali.dev/edb1ef0b-bb3d-4e86-aaa5-4130def90a93"
 }
