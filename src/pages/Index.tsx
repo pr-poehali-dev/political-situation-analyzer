@@ -94,15 +94,23 @@ const Index = () => {
   const collectNews = async () => {
     setIsCollectingNews(true);
     try {
+      console.log('Starting news collection for:', selectedCountry.code);
       const response = await fetch(`https://functions.poehali.dev/edb1ef0b-bb3d-4e86-aaa5-4130def90a93?country=${selectedCountry.code}`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
       if (!response.ok) {
-        throw new Error('Backend not available');
+        throw new Error(`Backend error: ${response.status}`);
       }
       await loadNews(selectedCountry.code);
     } catch (error) {
-      console.log('Backend not available');
+      console.error('News collection error:', error);
+      alert('Ошибка сбора новостей. Проверьте, что все API ключи добавлены (NEWS_API_KEY и GROQ_API_KEY)');
     } finally {
       setIsCollectingNews(false);
     }

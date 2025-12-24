@@ -144,8 +144,8 @@ export const allCountries = [
   { code: 'NC', name: 'Северный Кипр', region: 'Europe' },
   { code: 'AB', name: 'Абхазия', region: 'Europe' },
   { code: 'OS', name: 'Южная Осетия', region: 'Europe' },
-  { code: 'TM', name: 'Приднестровье', region: 'Europe' },
-  { code: 'SO', name: 'Сомалиленд', region: 'Africa' },
+  { code: 'PMR', name: 'Приднестровье', region: 'Europe' },
+  { code: 'SL', name: 'Сомалиленд', region: 'Africa' },
   { code: 'WS', name: 'Западная Сахара', region: 'Africa' },
   { code: 'HK', name: 'Гонконг', region: 'Asia' },
 ];
