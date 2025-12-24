@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Progress } from '@/components/ui/progress';
-import WorldMap from '@/components/WorldMap';
+import { Input } from '@/components/ui/input';
+import RealisticWorldMap from '@/components/RealisticWorldMap';
 import FascismIndicators from '@/components/FascismIndicators';
+import { allCountries, defaultCountries } from '@/data/countries';
 
 type Country = {
   name: string;
@@ -19,16 +21,7 @@ type Country = {
   trend: 'up' | 'down' | 'stable';
 };
 
-const mockCountries: Country[] = [
-  { name: 'Россия', code: 'RU', democracyScore: 35, freedomScore: 28, authoritarianScore: 72, pressFreedомScore: 20, trend: 'down' },
-  { name: 'США', code: 'US', democracyScore: 78, freedomScore: 82, authoritarianScore: 22, pressFreedомScore: 75, trend: 'stable' },
-  { name: 'Германия', code: 'DE', democracyScore: 85, freedomScore: 88, authoritarianScore: 12, pressFreedомScore: 82, trend: 'up' },
-  { name: 'Китай', code: 'CN', democracyScore: 25, freedomScore: 18, authoritarianScore: 82, pressFreedомScore: 10, trend: 'down' },
-  { name: 'Норвегия', code: 'NO', democracyScore: 95, freedomScore: 97, authoritarianScore: 5, pressFreedомScore: 95, trend: 'stable' },
-  { name: 'Беларусь', code: 'BY', democracyScore: 22, freedomScore: 15, authoritarianScore: 85, pressFreedомScore: 12, trend: 'down' },
-  { name: 'Франция', code: 'FR', democracyScore: 82, freedomScore: 85, authoritarianScore: 15, pressFreedомScore: 78, trend: 'stable' },
-  { name: 'Япония', code: 'JP', democracyScore: 88, freedomScore: 90, authoritarianScore: 10, pressFreedомScore: 85, trend: 'up' },
-];
+const mockCountries: Country[] = defaultCountries;
 
 const mockNews = [
   {
@@ -72,6 +65,12 @@ const Index = () => {
   const [realNews, setRealNews] = useState<any[]>([]);
   const [isLoadingNews, setIsLoadingNews] = useState(false);
   const [isCollectingNews, setIsCollectingNews] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredCountries = allCountries.filter(country =>
+    country.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    country.code.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const loadNews = async (countryCode: string) => {
     setIsLoadingNews(true);
@@ -160,14 +159,32 @@ const Index = () => {
             <div className="flex items-center gap-3 w-full md:w-auto">
               <Icon name="Globe" className="text-primary" size={28} />
               <Select value={selectedCountry.code} onValueChange={(code) => {
-                const country = mockCountries.find(c => c.code === code);
-                if (country) setSelectedCountry(country);
+                const foundCountry = allCountries.find(c => c.code === code);
+                if (foundCountry) {
+                  const dataCountry = mockCountries.find(c => c.code === code);
+                  setSelectedCountry(dataCountry || { 
+                    ...foundCountry, 
+                    democracyScore: 50, 
+                    freedomScore: 50, 
+                    authoritarianScore: 50, 
+                    pressFreedомScore: 50, 
+                    trend: 'stable' as const 
+                  });
+                }
               }}>
                 <SelectTrigger className="w-full md:w-[300px] text-lg">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  {mockCountries.map((country) => (
+                <SelectContent className="max-h-[400px]">
+                  <div className="sticky top-0 z-10 bg-background p-2 border-b">
+                    <Input
+                      placeholder="Поиск страны..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
+                  {filteredCountries.map((country) => (
                     <SelectItem key={country.code} value={country.code}>
                       {country.name}
                     </SelectItem>
@@ -201,11 +218,21 @@ const Index = () => {
             <Icon name="Map" className="text-primary" />
             Интерактивная Карта Мира
           </h2>
-          <WorldMap
+          <RealisticWorldMap
             selectedCountry={selectedCountry.code}
             onCountrySelect={(code) => {
-              const country = mockCountries.find(c => c.code === code);
-              if (country) setSelectedCountry(country);
+              const foundCountry = allCountries.find(c => c.code === code);
+              if (foundCountry) {
+                const dataCountry = mockCountries.find(c => c.code === code);
+                setSelectedCountry(dataCountry || { 
+                  ...foundCountry, 
+                  democracyScore: 50, 
+                  freedomScore: 50, 
+                  authoritarianScore: 50, 
+                  pressFreedомScore: 50, 
+                  trend: 'stable' as const 
+                });
+              }
             }}
             countriesData={mockCountries.map(c => ({ code: c.code, democracyScore: c.democracyScore }))}
           />
