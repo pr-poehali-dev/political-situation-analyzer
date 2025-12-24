@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "Analyze news without OpenAI key",
+      "method": "POST",
+      "body": {
+        "text": "Правительство объявило о новых экономических реформах",
+        "sourceType": "gov",
+        "countryCode": "RU"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "sentiment": "string",
+        "bias": "number",
+        "credibility": "number",
+        "manipulation_detected": "boolean",
+        "summary": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Missing news text",
+      "method": "POST",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

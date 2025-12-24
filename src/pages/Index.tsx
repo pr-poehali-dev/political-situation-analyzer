@@ -3,8 +3,11 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Progress } from '@/components/ui/progress';
+import WorldMap from '@/components/WorldMap';
+import FascismIndicators from '@/components/FascismIndicators';
 
 type Country = {
   name: string;
@@ -65,6 +68,29 @@ const mockNews = [
 const Index = () => {
   const [selectedCountry, setSelectedCountry] = useState<Country>(mockCountries[0]);
   const [chartPeriod, setChartPeriod] = useState('6m');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    setTimeout(() => {
+      const element = document.createElement('a');
+      const reportData = {
+        country: selectedCountry.name,
+        date: new Date().toLocaleDateString('ru-RU'),
+        democracyScore: selectedCountry.democracyScore,
+        freedomScore: selectedCountry.freedomScore,
+        authoritarianScore: selectedCountry.authoritarianScore,
+        pressFreedомScore: selectedCountry.pressFreedомScore,
+      };
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      element.href = url;
+      element.download = `political-report-${selectedCountry.code}-${Date.now()}.json`;
+      element.click();
+      URL.revokeObjectURL(url);
+      setIsExporting(false);
+    }, 1000);
+  };
 
   const getScoreColor = (score: number) => {
     if (score >= 70) return 'text-green-400';
@@ -110,15 +136,40 @@ const Index = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Badge variant="outline" className="flex items-center gap-2">
-              <Icon 
-                name={selectedCountry.trend === 'up' ? 'TrendingUp' : selectedCountry.trend === 'down' ? 'TrendingDown' : 'Minus'} 
-                size={16}
-                className={selectedCountry.trend === 'up' ? 'text-green-400' : selectedCountry.trend === 'down' ? 'text-red-400' : 'text-yellow-400'}
-              />
-              <span>Тренд: {selectedCountry.trend === 'up' ? 'Улучшение' : selectedCountry.trend === 'down' ? 'Ухудшение' : 'Стабильно'}</span>
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="flex items-center gap-2">
+                <Icon 
+                  name={selectedCountry.trend === 'up' ? 'TrendingUp' : selectedCountry.trend === 'down' ? 'TrendingDown' : 'Minus'} 
+                  size={16}
+                  className={selectedCountry.trend === 'up' ? 'text-green-400' : selectedCountry.trend === 'down' ? 'text-red-400' : 'text-yellow-400'}
+                />
+                <span>Тренд: {selectedCountry.trend === 'up' ? 'Улучшение' : selectedCountry.trend === 'down' ? 'Ухудшение' : 'Стабильно'}</span>
+              </Badge>
+              <Button 
+                onClick={handleExportPDF} 
+                disabled={isExporting}
+                className="flex items-center gap-2"
+              >
+                <Icon name={isExporting ? 'Loader2' : 'Download'} size={18} className={isExporting ? 'animate-spin' : ''} />
+                {isExporting ? 'Экспорт...' : 'Скачать отчёт'}
+              </Button>
+            </div>
           </div>
+        </Card>
+
+        <Card className="p-6 border-2 animate-fade-in">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            <Icon name="Map" className="text-primary" />
+            Интерактивная Карта Мира
+          </h2>
+          <WorldMap
+            selectedCountry={selectedCountry.code}
+            onCountrySelect={(code) => {
+              const country = mockCountries.find(c => c.code === code);
+              if (country) setSelectedCountry(country);
+            }}
+            countriesData={mockCountries.map(c => ({ code: c.code, democracyScore: c.democracyScore }))}
+          />
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -249,6 +300,8 @@ const Index = () => {
             </div>
           </Card>
         </div>
+
+        <FascismIndicators countryCode={selectedCountry.code} />
 
         <Card className="p-6 border-2">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
