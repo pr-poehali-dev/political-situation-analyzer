@@ -33,8 +33,13 @@ def handler(event, context):
         news_api_key = os.environ.get('NEWS_API_KEY')
         groq_key = os.environ.get('GROQ_API_KEY')
         
+        print(f'Method: {method}, Country: {country_code}')
+        print(f'Has NEWS_API_KEY: {bool(news_api_key)}, Has GROQ_KEY: {bool(groq_key)}')
+        
         if method == 'POST' and news_api_key:
+            print('Starting news collection...')
             collect_news(db_url, news_api_key, groq_key, country_code)
+            print('News collection completed')
         
         news = get_news_from_db(db_url, country_code, limit)
         
@@ -96,8 +101,10 @@ def get_news_from_db(db_url, country_code, limit):
 
 def collect_news(db_url, news_api_key, groq_key, country_code):
     """Сбор новостей через News API"""
+    print(f'collect_news called for {country_code}')
     try:
         import requests
+        print('Requests imported')
         
         country_map = {
             'RU': 'ru', 'US': 'us', 'DE': 'de', 'CN': 'cn',
