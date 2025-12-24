@@ -1,0 +1,13 @@
+{
+  "tests": [
+    {
+      "name": "Test backend deployment",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "status": "ok"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

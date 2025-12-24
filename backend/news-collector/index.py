@@ -7,7 +7,7 @@ from psycopg2.extras import RealDictCursor
 
 def handler(event, context):
     """
-    Автоматический сбор новостей из различных источников с проверкой на фейки
+    Автоматический сбор новостей из различных источников с проверкой на фейки для политического анализа
     """
     method = event.get('httpMethod', 'GET')
     
