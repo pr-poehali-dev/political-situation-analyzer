@@ -1,7 +1,10 @@
 import json
 
+
 def handler(event, context):
-    """Тестовый API endpoint для проверки развёртывания"""
+    """
+    Простая проверка работоспособности API
+    """
     method = event.get('httpMethod', 'GET')
     
     if method == 'OPTIONS':
@@ -24,7 +27,8 @@ def handler(event, context):
         },
         'body': json.dumps({
             'status': 'ok',
-            'message': 'Backend deployed successfully'
+            'message': 'Backend is working!',
+            'version': '1.0.0'
         }),
         'isBase64Encoded': False
     }

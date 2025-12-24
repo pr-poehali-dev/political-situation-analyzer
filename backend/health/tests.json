@@ -1,11 +1,13 @@
 {
   "tests": [
     {
-      "name": "Test backend deployment",
+      "name": "Health check returns ok",
       "method": "GET",
+      "path": "/",
       "expectedStatus": 200,
       "expectedBody": {
-        "status": "ok"
+        "status": "ok",
+        "message": "Backend is working!"
       },
       "bodyMatcher": "partial"
     }

@@ -75,7 +75,7 @@ const Index = () => {
   const loadNews = async (countryCode: string) => {
     setIsLoadingNews(true);
     try {
-      const response = await fetch(`https://functions.yandexcloud.net/news-collector?country=${countryCode}&limit=20`);
+      const response = await fetch(`https://functions.poehali.dev/edb1ef0b-bb3d-4e86-aaa5-4130def90a93?country=${countryCode}&limit=20`);
       if (!response.ok) {
         throw new Error('Backend not available');
       }
@@ -94,7 +94,7 @@ const Index = () => {
   const collectNews = async () => {
     setIsCollectingNews(true);
     try {
-      const response = await fetch(`https://functions.yandexcloud.net/news-collector?country=${selectedCountry.code}`, {
+      const response = await fetch(`https://functions.poehali.dev/edb1ef0b-bb3d-4e86-aaa5-4130def90a93?country=${selectedCountry.code}`, {
         method: 'POST'
       });
       if (!response.ok) {
