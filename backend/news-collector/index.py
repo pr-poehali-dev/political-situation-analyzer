@@ -120,13 +120,19 @@ def collect_news(db_url, news_api_key, groq_key, country_code):
             'pageSize': 10
         }
         
+        print(f'Requesting NewsAPI for country: {api_country}')
         response = requests.get(url, params=params, timeout=10)
+        print(f'NewsAPI response status: {response.status_code}')
+        
         data = response.json()
+        print(f'NewsAPI response: {data}')
         
         if data.get('status') != 'ok':
+            print(f'NewsAPI error: {data.get("message", "Unknown error")}')
             return
         
         articles = data.get('articles', [])
+        print(f'Found {len(articles)} articles')
         
         conn = psycopg2.connect(db_url)
         try:
