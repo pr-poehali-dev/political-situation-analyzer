@@ -73,20 +73,20 @@ const Index = () => {
   const [isLoadingNews, setIsLoadingNews] = useState(false);
   const [isCollectingNews, setIsCollectingNews] = useState(false);
 
-  useEffect(() => {
-    loadNews(selectedCountry.code);
-  }, [selectedCountry.code]);
-
   const loadNews = async (countryCode: string) => {
     setIsLoadingNews(true);
     try {
-      const response = await fetch(`/backend/news-collector?country=${countryCode}&limit=20`);
+      const response = await fetch(`https://functions.yandexcloud.net/news-collector?country=${countryCode}&limit=20`);
+      if (!response.ok) {
+        throw new Error('Backend not available');
+      }
       const data = await response.json();
       if (data.news && data.news.length > 0) {
         setRealNews(data.news);
       }
     } catch (error) {
-      console.error('Error loading news:', error);
+      console.log('Backend not available, using mock data');
+      setRealNews([]);
     } finally {
       setIsLoadingNews(false);
     }
@@ -95,12 +95,15 @@ const Index = () => {
   const collectNews = async () => {
     setIsCollectingNews(true);
     try {
-      await fetch(`/backend/news-collector?country=${selectedCountry.code}`, {
+      const response = await fetch(`https://functions.yandexcloud.net/news-collector?country=${selectedCountry.code}`, {
         method: 'POST'
       });
+      if (!response.ok) {
+        throw new Error('Backend not available');
+      }
       await loadNews(selectedCountry.code);
     } catch (error) {
-      console.error('Error collecting news:', error);
+      console.log('Backend not available');
     } finally {
       setIsCollectingNews(false);
     }
