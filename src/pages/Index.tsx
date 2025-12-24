@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -69,6 +69,42 @@ const Index = () => {
   const [selectedCountry, setSelectedCountry] = useState<Country>(mockCountries[0]);
   const [chartPeriod, setChartPeriod] = useState('6m');
   const [isExporting, setIsExporting] = useState(false);
+  const [realNews, setRealNews] = useState<any[]>([]);
+  const [isLoadingNews, setIsLoadingNews] = useState(false);
+  const [isCollectingNews, setIsCollectingNews] = useState(false);
+
+  useEffect(() => {
+    loadNews(selectedCountry.code);
+  }, [selectedCountry.code]);
+
+  const loadNews = async (countryCode: string) => {
+    setIsLoadingNews(true);
+    try {
+      const response = await fetch(`/backend/news-collector?country=${countryCode}&limit=20`);
+      const data = await response.json();
+      if (data.news && data.news.length > 0) {
+        setRealNews(data.news);
+      }
+    } catch (error) {
+      console.error('Error loading news:', error);
+    } finally {
+      setIsLoadingNews(false);
+    }
+  };
+
+  const collectNews = async () => {
+    setIsCollectingNews(true);
+    try {
+      await fetch(`/backend/news-collector?country=${selectedCountry.code}`, {
+        method: 'POST'
+      });
+      await loadNews(selectedCountry.code);
+    } catch (error) {
+      console.error('Error collecting news:', error);
+    } finally {
+      setIsCollectingNews(false);
+    }
+  };
 
   const handleExportPDF = async () => {
     setIsExporting(true);
@@ -304,10 +340,27 @@ const Index = () => {
         <FascismIndicators countryCode={selectedCountry.code} />
 
         <Card className="p-6 border-2">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Icon name="Newspaper" className="text-primary" />
-            Анализ Новостей
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Icon name="Newspaper" className="text-primary" />
+              Анализ Новостей
+            </h2>
+            <Button 
+              onClick={collectNews} 
+              disabled={isCollectingNews}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Icon name={isCollectingNews ? 'Loader2' : 'RefreshCw'} size={16} className={isCollectingNews ? 'animate-spin' : ''} />
+              {isCollectingNews ? 'Сбор...' : 'Собрать новости'}
+            </Button>
+          </div>
+          
+          {isLoadingNews ? (
+            <div className="flex items-center justify-center py-12">
+              <Icon name="Loader2" size={32} className="animate-spin text-primary" />
+            </div>
+          ) : null}
           
           <Tabs defaultValue="all" className="space-y-6">
             <TabsList className="grid w-full md:w-[400px] grid-cols-3">
@@ -317,16 +370,29 @@ const Index = () => {
             </TabsList>
 
             <TabsContent value="all" className="space-y-4">
-              {mockNews.map((news, idx) => (
+              {(realNews.length > 0 ? realNews : mockNews).map((news, idx) => (
                 <div key={news.id} className="p-4 border-2 rounded-lg hover:bg-card-foreground/5 transition-all animate-fade-in" style={{ animationDelay: `${idx * 0.1}s` }}>
                   <div className="flex flex-col md:flex-row justify-between gap-3">
                     <div className="space-y-2 flex-1">
                       <h3 className="font-semibold text-lg">{news.title}</h3>
                       <div className="flex items-center gap-3 flex-wrap">
-                        <Badge variant={news.type === 'gov' ? 'default' : 'secondary'}>
+                        <Badge variant={news.source_type === 'gov' || news.type === 'gov' ? 'default' : 'secondary'}>
                           {news.source}
                         </Badge>
-                        <span className="text-sm text-muted-foreground">{news.date}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {news.published_at ? new Date(news.published_at).toLocaleDateString('ru-RU') : news.date}
+                        </span>
+                        {news.is_fake && (
+                          <Badge variant="destructive" className="flex items-center gap-1">
+                            <Icon name="AlertCircle" size={14} />
+                            Фейк
+                          </Badge>
+                        )}
+                        {news.credibility_score && (
+                          <Badge variant="outline">
+                            Достоверность: {news.credibility_score}%
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center">
