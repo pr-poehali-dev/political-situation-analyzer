@@ -106,21 +106,29 @@ def collect_news(db_url, news_api_key, groq_key, country_code):
         import requests
         print('Requests imported')
         
-        country_map = {
-            'RU': 'ru', 'US': 'us', 'DE': 'de', 'CN': 'cn',
-            'NO': 'no', 'BY': 'ru', 'FR': 'fr', 'JP': 'jp'
+        country_keywords = {
+            'RU': 'Russia OR Россия',
+            'US': 'USA OR America',
+            'DE': 'Germany OR Deutschland',
+            'CN': 'China',
+            'NO': 'Norway',
+            'BY': 'Belarus',
+            'FR': 'France',
+            'JP': 'Japan'
         }
         
-        api_country = country_map.get(country_code, 'us')
+        keyword = country_keywords.get(country_code, 'news')
         
-        url = 'https://newsapi.org/v2/top-headlines'
+        url = 'https://newsapi.org/v2/everything'
         params = {
-            'country': api_country,
+            'q': keyword,
             'apiKey': news_api_key,
-            'pageSize': 10
+            'pageSize': 10,
+            'sortBy': 'publishedAt',
+            'language': 'en'
         }
         
-        print(f'Requesting NewsAPI for country: {api_country}')
+        print(f'Requesting NewsAPI with keyword: {keyword}')
         response = requests.get(url, params=params, timeout=10)
         print(f'NewsAPI response status: {response.status_code}')
         
