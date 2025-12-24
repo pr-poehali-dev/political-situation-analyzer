@@ -31,10 +31,10 @@ def handler(event, context):
         
         db_url = os.environ.get('DATABASE_URL')
         news_api_key = os.environ.get('NEWS_API_KEY')
-        openai_key = os.environ.get('OPENAI_API_KEY')
+        groq_key = os.environ.get('GROQ_API_KEY')
         
         if method == 'POST' and news_api_key:
-            collect_news(db_url, news_api_key, openai_key, country_code)
+            collect_news(db_url, news_api_key, groq_key, country_code)
         
         news = get_news_from_db(db_url, country_code, limit)
         
@@ -94,7 +94,7 @@ def get_news_from_db(db_url, country_code, limit):
         return []
 
 
-def collect_news(db_url, news_api_key, openai_key, country_code):
+def collect_news(db_url, news_api_key, groq_key, country_code):
     """Сбор новостей через News API"""
     try:
         import requests
@@ -131,7 +131,7 @@ def collect_news(db_url, news_api_key, openai_key, country_code):
                     article_url = article.get('url', '')[:500]
                     published = article.get('publishedAt', datetime.now().isoformat())
                     
-                    is_fake, reason = check_fake(title, content, openai_key)
+                    is_fake, reason = check_fake(title, content, groq_key)
                     
                     cur.execute("""
                         INSERT INTO news_articles 
@@ -143,7 +143,7 @@ def collect_news(db_url, news_api_key, openai_key, country_code):
                     result = cur.fetchone()
                     if result:
                         article_id = result[0]
-                        analyze_and_save(article_id, title, content, openai_key, cur)
+                        analyze_and_save(article_id, title, content, groq_key, cur)
                 
                 conn.commit()
         finally:
@@ -153,14 +153,14 @@ def collect_news(db_url, news_api_key, openai_key, country_code):
         print(f'Error collecting news: {e}')
 
 
-def check_fake(title, content, openai_key):
+def check_fake(title, content, groq_key):
     """Проверка новости на фейк через ИИ"""
-    if not openai_key or not title:
+    if not groq_key or not title:
         return None, None
     
     try:
-        from openai import OpenAI
-        client = OpenAI(api_key=openai_key)
+        from groq import Groq
+        client = Groq(api_key=groq_key)
         
         text = f"{title}. {content or ''}"[:500]
         
@@ -172,7 +172,7 @@ JSON формат:
 {{"is_fake": true/false, "reason": "объяснение"}}"""
 
         response = client.chat.completions.create(
-            model='gpt-4o-mini',
+            model='llama-3.1-70b-versatile',
             messages=[
                 {'role': 'system', 'content': 'Ты эксперт по фактчекингу.'},
                 {'role': 'user', 'content': prompt}
@@ -188,14 +188,14 @@ JSON формат:
         return None, None
 
 
-def analyze_and_save(article_id, title, content, openai_key, cur):
+def analyze_and_save(article_id, title, content, groq_key, cur):
     """Анализ новости и сохранение в БД"""
-    if not openai_key:
+    if not groq_key:
         return
     
     try:
-        from openai import OpenAI
-        client = OpenAI(api_key=openai_key)
+        from groq import Groq
+        client = Groq(api_key=groq_key)
         
         text = f"{title}. {content or ''}"[:800]
         
@@ -207,7 +207,7 @@ JSON:
 {{"sentiment": "positive/negative/neutral", "bias_score": 0-100, "credibility_score": 0-100, "manipulation_detected": true/false, "summary": "текст", "keywords": ["слово1", "слово2"]}}"""
 
         response = client.chat.completions.create(
-            model='gpt-4o-mini',
+            model='llama-3.1-70b-versatile',
             messages=[
                 {'role': 'system', 'content': 'Анализ новостей.'},
                 {'role': 'user', 'content': prompt}
